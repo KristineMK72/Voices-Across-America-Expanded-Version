@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>💬 Voices Across America</title>
+<title>💬 Voices Across America – Hope Edition</title>
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -19,13 +19,23 @@
     overflow: hidden;
   }
 
+  #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+    background: #000;
+  }
+
   header {
     position: fixed;
     top: 0;
     width: 100%;
     text-align: center;
-    padding: 1.2rem;
-    background: rgba(0, 0, 0, 0.85);
+    padding: 1.5rem 1rem;
+    background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
   }
 
@@ -37,41 +47,35 @@
   }
 
   header p {
-    margin: 0.3rem 0 0;
+    margin: 0.4rem 0 0;
     font-size: 1rem;
     color: #ccc;
   }
 
-  #map {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
+  /* Fading Narration */
+  #narration {
+    position: fixed;
+    bottom: 10%;
     width: 100%;
-    z-index: 1;
-    background: #000;
+    text-align: center;
+    font-size: 1.4rem;
+    color: #ffe4b5;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+    font-style: italic;
   }
 
   @keyframes ripple {
-    0% {
-      transform: scale(0.3);
-      opacity: 0.8;
-    }
-    80% {
-      transform: scale(4);
-      opacity: 0.1;
-    }
-    100% {
-      transform: scale(4.5);
-      opacity: 0;
-    }
+    0% { transform: scale(0.3); opacity: 0.8; }
+    80% { transform: scale(4); opacity: 0.1; }
+    100% { transform: scale(4.5); opacity: 0; }
   }
 
   .ripple {
     position: absolute;
     width: 20px;
     height: 20px;
-    background: radial-gradient(circle, rgba(173,216,230,0.8) 0%, rgba(173,216,230,0.1) 70%, transparent 100%);
+    background: radial-gradient(circle, rgba(255,223,150,0.8) 0%, rgba(255,223,150,0.1) 70%, transparent 100%);
     border-radius: 50%;
     pointer-events: none;
     animation: ripple 4s ease-out;
@@ -82,8 +86,17 @@
     height: 12px;
     background: radial-gradient(circle, #aee8ff 0%, #88e0ff 50%, rgba(255,255,255,0) 80%);
     border-radius: 50%;
-    box-shadow: 0 0 12px rgba(120,220,255,0.9);
+    box-shadow: 0 0 15px rgba(180,220,255,0.9);
     opacity: 0.9;
+    cursor: pointer;
+  }
+
+  .leaflet-popup-content-wrapper {
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
   }
 </style>
 </head>
@@ -91,13 +104,13 @@
 <body>
   <header>
     <h1>💬 Voices Across America</h1>
-    <p>Each voice echoes. Each spark ignites hope.</p>
+    <p>Every light is a voice. Every voice brings hope.</p>
   </header>
 
   <div id="map"></div>
+  <div id="narration">A spark of understanding...</div>
 
   <script>
-    // Initialize map
     const map = L.map('map', {
       center: [39.5, -98.35],
       zoom: 4,
@@ -105,72 +118,39 @@
       attributionControl: false
     });
 
-    // Dark basemap
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap & CARTO'
-    }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // Expanded list of cities — coast to coast
     const cities = [
-      { name: "Los Angeles", coords: [34.0522, -118.2437] },
-      { name: "San Diego", coords: [32.7157, -117.1611] },
-      { name: "San Francisco", coords: [37.7749, -122.4194] },
-      { name: "Sacramento", coords: [38.5816, -121.4944] },
-      { name: "Seattle", coords: [47.6062, -122.3321] },
-      { name: "Portland", coords: [45.5152, -122.6784] },
-      { name: "Boise", coords: [43.6150, -116.2023] },
-      { name: "Las Vegas", coords: [36.1699, -115.1398] },
-      { name: "Phoenix", coords: [33.4484, -112.0740] },
-      { name: "Tucson", coords: [32.2226, -110.9747] },
-      { name: "Denver", coords: [39.7392, -104.9903] },
-      { name: "Salt Lake City", coords: [40.7608, -111.8910] },
-      { name: "Albuquerque", coords: [35.0844, -106.6504] },
-      { name: "Dallas", coords: [32.7767, -96.7970] },
-      { name: "Austin", coords: [30.2672, -97.7431] },
-      { name: "Houston", coords: [29.7604, -95.3698] },
-      { name: "San Antonio", coords: [29.4241, -98.4936] },
-      { name: "Oklahoma City", coords: [35.4676, -97.5164] },
-      { name: "Kansas City", coords: [39.0997, -94.5786] },
-      { name: "Omaha", coords: [41.2565, -95.9345] },
-      { name: "Minneapolis", coords: [44.9778, -93.2650] },
-      { name: "Des Moines", coords: [41.5868, -93.6250] },
-      { name: "St. Louis", coords: [38.6270, -90.1994] },
-      { name: "Chicago", coords: [41.8781, -87.6298] },
-      { name: "Indianapolis", coords: [39.7684, -86.1581] },
-      { name: "Detroit", coords: [42.3314, -83.0458] },
-      { name: "Cleveland", coords: [41.4993, -81.6944] },
-      { name: "Columbus", coords: [39.9612, -82.9988] },
-      { name: "Louisville", coords: [38.2527, -85.7585] },
-      { name: "Nashville", coords: [36.1627, -86.7816] },
-      { name: "Memphis", coords: [35.1495, -90.0490] },
-      { name: "Birmingham", coords: [33.5186, -86.8104] },
-      { name: "Atlanta", coords: [33.7490, -84.3880] },
-      { name: "Charlotte", coords: [35.2271, -80.8431] },
-      { name: "Raleigh", coords: [35.7796, -78.6382] },
-      { name: "Charleston", coords: [32.7765, -79.9311] },
-      { name: "Miami", coords: [25.7617, -80.1918] },
-      { name: "Tampa", coords: [27.9506, -82.4572] },
-      { name: "Orlando", coords: [28.5383, -81.3792] },
-      { name: "Washington, D.C.", coords: [38.9072, -77.0369] },
-      { name: "Baltimore", coords: [39.2904, -76.6122] },
-      { name: "Philadelphia", coords: [39.9526, -75.1652] },
-      { name: "New York City", coords: [40.7128, -74.0060] },
-      { name: "Boston", coords: [42.3601, -71.0589] },
-      { name: "Pittsburgh", coords: [40.4406, -79.9959] },
-      { name: "Buffalo", coords: [42.8864, -78.8784] }
+      { name: "Los Angeles", coords: [34.0522, -118.2437], message: "A voice for change echoes in the West." },
+      { name: "San Francisco", coords: [37.7749, -122.4194], message: "Innovation meets compassion." },
+      { name: "Seattle", coords: [47.6062, -122.3321], message: "Rain and reflection — empathy grows." },
+      { name: "Denver", coords: [39.7392, -104.9903], message: "Hope rises over the Rockies." },
+      { name: "Dallas", coords: [32.7767, -96.7970], message: "Every voice matters — every heart counts." },
+      { name: "Minneapolis", coords: [44.9778, -93.2650], message: "From still waters, action flows." },
+      { name: "Chicago", coords: [41.8781, -87.6298], message: "The heartland beats with courage." },
+      { name: "Atlanta", coords: [33.7490, -84.3880], message: "The spirit of unity endures." },
+      { name: "Miami", coords: [25.7617, -80.1918], message: "Waves carry stories of resilience." },
+      { name: "New York City", coords: [40.7128, -74.0060], message: "Where millions of voices become one." },
+      { name: "Boston", coords: [42.3601, -71.0589], message: "Ideas spark, and hearts open." },
+      { name: "Washington, D.C.", coords: [38.9072, -77.0369], message: "A light for justice flickers brighter." }
     ];
 
-    // Add glowing dots
     const dotLayer = L.layerGroup().addTo(map);
+
     cities.forEach(city => {
       const divIcon = L.divIcon({
         className: 'city-dot',
         iconSize: [12, 12]
       });
-      L.marker(city.coords, { icon: divIcon }).addTo(dotLayer);
+
+      const marker = L.marker(city.coords, { icon: divIcon }).addTo(dotLayer);
+      marker.bindPopup(`<strong>${city.name}</strong><br>${city.message}`);
+      marker.on('click', () => {
+        rippleAt(city);
+      });
     });
 
-    // Ripple function
+    // Ripple animation
     function rippleAt(city) {
       const point = map.latLngToContainerPoint(city.coords);
       const ripple = document.createElement('div');
@@ -181,14 +161,33 @@
       setTimeout(() => ripple.remove(), 4000);
     }
 
-    // Animate ripples randomly across all cities
+    // Random ripple animation
     function animateRipples() {
       const city = cities[Math.floor(Math.random() * cities.length)];
       rippleAt(city);
-      setTimeout(animateRipples, 1000 + Math.random() * 2000);
+      setTimeout(animateRipples, 1200 + Math.random() * 2000);
     }
-
     animateRipples();
+
+    // Narration that fades in and out
+    const lines = [
+      "A spark of understanding...",
+      "A wave of empathy travels east...",
+      "Hearts awaken from coast to coast...",
+      "Every city whispers, 'You are not alone.'",
+      "Hope connects us all."
+    ];
+    let i = 0;
+    function cycleNarration() {
+      const el = document.getElementById('narration');
+      el.style.opacity = 0;
+      setTimeout(() => {
+        el.textContent = lines[i];
+        el.style.opacity = 1;
+        i = (i + 1) % lines.length;
+      }, 2000);
+    }
+    setInterval(cycleNarration, 7000);
   </script>
 </body>
 </html>
