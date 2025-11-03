@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>💬 Voices Across America – Hope Edition</title>
+<title>💬 Voices Across America — Unity Edition</title>
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -34,7 +34,7 @@
     top: 0;
     width: 100%;
     text-align: center;
-    padding: 1.5rem 1rem;
+    padding: 1rem;
     background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
   }
@@ -43,7 +43,6 @@
     margin: 0;
     font-size: 1.8rem;
     color: #fff;
-    font-weight: 600;
   }
 
   header p {
@@ -52,23 +51,37 @@
     color: #ccc;
   }
 
-  /* Fading Narration */
+  /* Narration banner that moves across bottom */
   #narration {
     position: fixed;
-    bottom: 10%;
+    bottom: 4%;
     width: 100%;
     text-align: center;
-    font-size: 1.4rem;
-    color: #ffe4b5;
-    opacity: 0;
-    transition: opacity 2s ease-in-out;
+    font-size: 1.3rem;
+    color: #ffe8b5;
     font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 0.9;
+    z-index: 1001;
+    animation: moveText 14s linear infinite;
   }
 
+  @keyframes moveText {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Ripple + twinkle */
   @keyframes ripple {
     0% { transform: scale(0.3); opacity: 0.8; }
     80% { transform: scale(4); opacity: 0.1; }
     100% { transform: scale(4.5); opacity: 0; }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
   }
 
   .ripple {
@@ -88,7 +101,29 @@
     border-radius: 50%;
     box-shadow: 0 0 15px rgba(180,220,255,0.9);
     opacity: 0.9;
+    animation: twinkle 4s ease-in-out infinite;
     cursor: pointer;
+  }
+
+  #toggleAnimation {
+    position: fixed;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    z-index: 1002;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: background 0.3s;
+  }
+
+  #toggleAnimation:hover {
+    background: rgba(255,255,255,0.2);
   }
 
   .leaflet-popup-content-wrapper {
@@ -108,7 +143,8 @@
   </header>
 
   <div id="map"></div>
-  <div id="narration">A spark of understanding...</div>
+  <div id="narration">A spark of hope ignites...</div>
+  <button id="toggleAnimation">Pause</button>
 
   <script>
     const map = L.map('map', {
@@ -123,7 +159,7 @@
     const cities = [
       { name: "Los Angeles", coords: [34.0522, -118.2437], message: "A voice for change echoes in the West." },
       { name: "San Francisco", coords: [37.7749, -122.4194], message: "Innovation meets compassion." },
-      { name: "Seattle", coords: [47.6062, -122.3321], message: "Rain and reflection — empathy grows." },
+      { name: "Seattle", coords: [47.6062, -122.3321], message: "Empathy grows like rain." },
       { name: "Denver", coords: [39.7392, -104.9903], message: "Hope rises over the Rockies." },
       { name: "Dallas", coords: [32.7767, -96.7970], message: "Every voice matters — every heart counts." },
       { name: "Minneapolis", coords: [44.9778, -93.2650], message: "From still waters, action flows." },
@@ -132,7 +168,9 @@
       { name: "Miami", coords: [25.7617, -80.1918], message: "Waves carry stories of resilience." },
       { name: "New York City", coords: [40.7128, -74.0060], message: "Where millions of voices become one." },
       { name: "Boston", coords: [42.3601, -71.0589], message: "Ideas spark, and hearts open." },
-      { name: "Washington, D.C.", coords: [38.9072, -77.0369], message: "A light for justice flickers brighter." }
+      { name: "Washington, D.C.", coords: [38.9072, -77.0369], message: "A light for justice flickers brighter." },
+      { name: "Phoenix", coords: [33.4484, -112.0740], message: "The desert blooms with empathy." },
+      { name: "Portland", coords: [45.5152, -122.6784], message: "Kindness flows with the river." }
     ];
 
     const dotLayer = L.layerGroup().addTo(map);
@@ -145,12 +183,9 @@
 
       const marker = L.marker(city.coords, { icon: divIcon }).addTo(dotLayer);
       marker.bindPopup(`<strong>${city.name}</strong><br>${city.message}`);
-      marker.on('click', () => {
-        rippleAt(city);
-      });
+      marker.on('click', () => rippleAt(city));
     });
 
-    // Ripple animation
     function rippleAt(city) {
       const point = map.latLngToContainerPoint(city.coords);
       const ripple = document.createElement('div');
@@ -161,33 +196,43 @@
       setTimeout(() => ripple.remove(), 4000);
     }
 
-    // Random ripple animation
+    // Ripple animation
+    let isAnimating = true;
     function animateRipples() {
+      if (!isAnimating) return;
       const city = cities[Math.floor(Math.random() * cities.length)];
       rippleAt(city);
       setTimeout(animateRipples, 1200 + Math.random() * 2000);
     }
     animateRipples();
 
-    // Narration that fades in and out
+    // Narration cycling across bottom
     const lines = [
-      "A spark of understanding...",
-      "A wave of empathy travels east...",
-      "Hearts awaken from coast to coast...",
-      "Every city whispers, 'You are not alone.'",
-      "Hope connects us all."
+      "A spark of hope ignites...",
+      "Empathy ripples across cities...",
+      "From Minneapolis’s music to NYC’s hustle...",
+      "Every voice builds a brighter future.",
+      "Together, we rise in unity."
     ];
     let i = 0;
     function cycleNarration() {
+      if (!isAnimating) return;
       const el = document.getElementById('narration');
-      el.style.opacity = 0;
-      setTimeout(() => {
-        el.textContent = lines[i];
-        el.style.opacity = 1;
-        i = (i + 1) % lines.length;
-      }, 2000);
+      el.textContent = lines[i];
+      i = (i + 1) % lines.length;
     }
     setInterval(cycleNarration, 7000);
+
+    // Toggle play/pause
+    const toggleButton = document.getElementById('toggleAnimation');
+    toggleButton.addEventListener('click', () => {
+      isAnimating = !isAnimating;
+      toggleButton.textContent = isAnimating ? 'Pause' : 'Play';
+      if (isAnimating) {
+        animateRipples();
+        cycleNarration();
+      }
+    });
   </script>
 </body>
 </html>
